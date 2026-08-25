@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TO DO LIST</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#04060b">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TO DO">
+</head>
+<body>
+
+<div class="page">
+  <h1 class="title-field">TO DO LIST</h1>
+  <div class="meta-line" id="metaLine">0 missions · 0 done</div>
+
+  <div class="composer">
+    <span class="plus">+</span>
+    <input type="text" id="composerInput" placeholder="Name your next mission…" autocomplete="off">
+    <button id="addBtn">Add</button>
+  </div>
+
+  <div class="select-bar" id="selectBar" hidden>
+    <button id="selectCancelBtn" class="cancel" title="Cancel selection">&times;</button>
+    <span class="select-count" id="selectCount">0 selected</span>
+    <div class="select-actions">
+      <button id="bulkDoneBtn">Mark done</button>
+      <button id="bulkRemoveBtn" class="danger">Remove</button>
+    </div>
+  </div>
+
+  <ul class="list" id="list"></ul>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
