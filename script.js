@@ -4,18 +4,11 @@
   var inputEl = document.getElementById('composerInput');
   var addBtn = document.getElementById('addBtn');
   var metaLine = document.getElementById('metaLine');
-  var selectBar = document.getElementById('selectBar');
-  var selectCount = document.getElementById('selectCount');
-  var selectCancelBtn = document.getElementById('selectCancelBtn');
-  var bulkDoneBtn = document.getElementById('bulkDoneBtn');
-  var bulkRemoveBtn = document.getElementById('bulkRemoveBtn');
 
   var missions = [];
   var openMenuId = null;
   var editingId = null;
   var idCounter = 1;
-  var selectMode = false;
-  var selectedIds = [];
   var clickTimers = {};
 
   function uid(){
@@ -118,68 +111,6 @@
 
   function closeMenu(){ openMenuId = null; }
 
-  // --- Multi-select (WhatsApp-style): starts from a row's "Select" menu
-  // option, then tap other rows' checkboxes to add them, then act on all
-  // selected at once with Mark done / Remove in the bar above the list.
-
-  function startSelecting(id){
-    selectMode = true;
-    selectedIds = [id];
-    closeMenu();
-    updateSelectBar();
-    render();
-  }
-
-  function toggleSelected(id){
-    var idx = selectedIds.indexOf(id);
-    if(idx === -1){ selectedIds.push(id); }
-    else { selectedIds.splice(idx, 1); }
-    if(selectedIds.length === 0){
-      exitSelectMode();
-      return;
-    }
-    updateSelectBar();
-    render();
-  }
-
-  function exitSelectMode(){
-    selectMode = false;
-    selectedIds = [];
-    updateSelectBar();
-    render();
-  }
-
-  function updateSelectBar(){
-    selectBar.hidden = !selectMode;
-    var n = selectedIds.length;
-    selectCount.textContent = n + (n === 1 ? ' selected' : ' selected');
-  }
-
-  function bulkMarkDone(){
-    if(selectedIds.length === 0) return;
-    var idSet = selectedIds;
-    missions = missions.map(function(m){
-      if(idSet.indexOf(m.id) !== -1) return Object.assign({}, m, { done: true });
-      return m;
-    });
-    saveMissions();
-    exitSelectMode();
-  }
-
-  function bulkRemove(){
-    if(selectedIds.length === 0) return;
-    var idSet = selectedIds;
-    idSet.forEach(function(id){
-      var rowEl = listEl.querySelector('[data-id="' + id + '"]');
-      if(rowEl){ rowEl.classList.add('removing'); }
-    });
-    setTimeout(function(){
-      missions = missions.filter(function(m){ return idSet.indexOf(m.id) === -1; });
-      saveMissions();
-      exitSelectMode();
-    }, 200);
-  }
-
   function render(){
     listEl.innerHTML = '';
 
@@ -191,25 +122,13 @@
     }
 
     missions.forEach(function(m){
-      var isSelected = selectedIds.indexOf(m.id) !== -1;
       var li = document.createElement('li');
-      li.className = 'row' + (m.done ? ' done' : '') + (isSelected ? ' selected' : '');
+      li.className = 'row' + (m.done ? ' done' : '');
       li.setAttribute('data-id', m.id);
 
-      if(selectMode){
-        var checkbox = document.createElement('span');
-        checkbox.className = 'checkbox';
-        checkbox.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-        checkbox.addEventListener('click', function(e){
-          e.stopPropagation();
-          toggleSelected(m.id);
-        });
-        li.appendChild(checkbox);
-      } else {
-        var marker = document.createElement('span');
-        marker.className = 'marker';
-        li.appendChild(marker);
-      }
+      var marker = document.createElement('span');
+      marker.className = 'marker';
+      li.appendChild(marker);
 
       if(editingId === m.id){
         var editInput = document.createElement('input');
@@ -236,7 +155,6 @@
         textSpan.textContent = m.text;
         textSpan.addEventListener('click', function(e){
           e.stopPropagation();
-          if(selectMode){ toggleSelected(m.id); return; }
           // Delay the single-click action briefly so a follow-up second
           // click can upgrade this into a double-click (which opens the
           // menu instead of toggling done).
@@ -248,7 +166,6 @@
         });
         textSpan.addEventListener('dblclick', function(e){
           e.stopPropagation();
-          if(selectMode){ return; }
           if(clickTimers[m.id]){
             clearTimeout(clickTimers[m.id]);
             delete clickTimers[m.id];
@@ -258,25 +175,17 @@
         li.appendChild(textSpan);
       }
 
-      if(!selectMode && openMenuId === m.id){
+      if(openMenuId === m.id){
         var menu = document.createElement('div');
         menu.className = 'menu';
 
-        var editBtn = document.createElement('button');
-        editBtn.innerHTML = '<span class="glyph">e</span> Edit text';
-        editBtn.addEventListener('click', function(e){
+        var doneBtn = document.createElement('button');
+        doneBtn.innerHTML = '<span class="glyph">✓</span> ' + (m.done ? 'Mark undone' : 'Mark done');
+        doneBtn.addEventListener('click', function(e){
           e.stopPropagation();
-          startEdit(m.id);
+          toggleDone(m.id);
         });
-        menu.appendChild(editBtn);
-
-        var selectBtn = document.createElement('button');
-        selectBtn.innerHTML = '<span class="glyph">☐</span> Select';
-        selectBtn.addEventListener('click', function(e){
-          e.stopPropagation();
-          startSelecting(m.id);
-        });
-        menu.appendChild(selectBtn);
+        menu.appendChild(doneBtn);
 
         var divider = document.createElement('div');
         divider.className = 'menu-divider';
@@ -284,7 +193,7 @@
 
         var removeBtn = document.createElement('button');
         removeBtn.className = 'remove';
-        removeBtn.innerHTML = '<span class="glyph">x</span> Remove';
+        removeBtn.innerHTML = '<span class="glyph">x</span> Delete';
         removeBtn.addEventListener('click', function(e){
           e.stopPropagation();
           removeMission(m.id);
@@ -322,17 +231,7 @@
     }
   });
 
-  selectCancelBtn.addEventListener('click', function(){
-    exitSelectMode();
-  });
 
-  bulkDoneBtn.addEventListener('click', function(){
-    bulkMarkDone();
-  });
-
-  bulkRemoveBtn.addEventListener('click', function(){
-    bulkRemove();
-  });
 
   loadMissions();
 
